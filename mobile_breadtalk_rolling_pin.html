@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>BreadTalk Game</title>
+<meta charset="UTF-8">
+<meta name="viewport" author ="ErnestLee" content="width=device-width, initial-scale=1.0,  maximum-scale=1, user-scalable=no">
+
+<!--New-->
+<script src="javascript/jquery-1.11.3.min.js"></script>
+<script src="javascript/jquery.scrollstop.min.js"></script>
+<script src="javascript/ajax.js"></script>
+
+<style style="text/css"> 
+html, body {
+padding: 0;
+margin: 0;
+position:absolute;
+width:1080px;
+height:1920px;
+overflow: hidden;
+}
+
+/* Functional CSS Styling*/
+/* Hide scrollbar*/
+::-webkit-scrollbar {
+display: none;
+}
+/*CSS styling for fadein counter */
+#content{
+position: relative;
+top: 190px;
+/*left: 320px;*/
+text-align: center;
+font-family: SFNewRepublic;
+font-size:250px;
+color:#55380b;
+opacity:2;
+z-index: 2;
+}
+.img-wrapper {
+overflow:hidden;
+position:relative;
+display:inline-block;
+}
+.img-wrapper roll {
+width:400px;
+height:auto;
+}
+.img-wrapper scroller {
+width:200px;
+height:500px;
+}
+/*Creating & Centering the gauge*/
+#canvas {
+display: inline-block;
+position: fixed;
+top: 700px;
+left: 200px;
+width: 300px;
+margin: 100px auto;
+}
+#Counter {
+display: inline-block;
+position:fixed;
+top:700px;
+left: 650px;
+width: 300px;
+margin: 100px auto;
+}
+/*Custom font for numbers*/
+@font-face {
+font-family: SFNewRepublic;
+src: url("lib/breadtalk/font/sf_new_republic/SF New Republic.ttf");
+}
+/*Image set in Scroller & rolling-pin*/
+#scrollerDiv {
+position: fixed;
+top: 1150px;
+left: 200px;
+background-color: transparent;
+height: 650px;
+width: 750px;
+overflow: auto;
+z-index: 2;
+}
+#invisibleElement {
+height: 2490px;
+width: 1000px;
+}
+/*Function: NEW for Speed and Counter Text*/
+#speedSpan {
+color: #55380b;
+font-family: SFNewRepublic;
+font-size: 70px;
+position: fixed;
+text-align: center;
+top: 840px;
+left: 280px;
+
+}
+#timeSpan {
+color: #55380b;
+text-align: center;
+font-family: SFNewRepublic;
+font-size: 70px;
+position: fixed;
+top: 850px;
+left: 750px;
+
+}
+
+/* Game Page CSS Styling */
+/*Game Page1 CSS Styling*/
+#page1{
+position: absolute;
+top:0;
+left:0;
+z-index: 1;
+}
+/*Game Page2 CSS Styling*/
+#page2{
+top:0;
+left:0;
+z-index: 2;
+}
+/*Game Page3 CSS Styling*/
+#page3{
+position: absolute;
+top:0;
+left:0;
+z-index: 3;            
+}
+/*Game Page4 CSS Styling*/
+#page4{
+position: absolute;
+top:0;
+left:0;
+z-index: 4;
+}
+/*Game Page5 CSS Styling*/
+#page5{
+position: absolute;
+top:0;
+left:0;
+z-index: 5;
+}
+
+
+</style>
+</head>
+
+<!--Ernest_Lee 021115: set background image and set individual functionality-->
+<body>
+
+<!--Ernest 031115: 1st Game Page-->
+<div id="page1" align= "center" style ="background-image: url(lib/breadtalk/image/rolling_pin/Page1.png); width:100%; height:100%;">
+
+<!--Ernest_Lee 031115: set 'Start' button action-->
+<input style="outline:0;height:90px;width:400px; margin-top:1300px" type="image" id= "Point" src="lib/breadtalk/image/rolling_pin/Click_to_start_button.png" onclick ="Page2()"/>
+</div>
+
+<!--Ernest 031115: Script for 'start' button action- Page 1-->
+<script>
+function Page2() {   
+// To ensure updateTimer function is only called when user is in page2
+interval =  setInterval(function() {updateTimer()}, 2000);
+$("#page1").hide();
+$("#page2").show();
+//To check if the game is being played, will call MainGame method, else wouldnt start MaiinGame and reset counter and speedto original value 
+} 
+</script>
+
+<!--Ernest_Lee 041115:2nd Game Page-->
+<div id="page2" class="img-wrapper" align= "center" style=" position: relative; background-image: url(lib/breadtalk/image/rolling_pin/Page2.png); background-repeat: no-repeat; display: none; width: 100%;height: 100%;">
+
+<!--Ernest_Lee 121115: set id = content for creation of fadein countdown counter-->
+<div id='content'></div>
+<!--Ernest_Lee 041115: Make a gauge using canvas and JS-->
+<canvas id="canvas" width="300" height="300">
+<p> Your browser does not support the canvas tag</p>
+</canvas>
+<canvas id="Counter" width="300" height="300">
+<p> Your browser does not support the canvas tag</p>
+</canvas>
+<!--Ernest_Lee: 161115: TextField for speed and counter-->
+<p id="speedSpan">0.00<br>ms</p>
+<p id="timeSpan">10 s</p>
+
+<img id="roller" style="position: absolute; top:470px; left: 0px; width: 100%" src="lib/breadtalk/image/rolling_pin/Rolling_pin/rolling%20pin_00000.png"/>
+<img id="scroll" style="position:absolute; top: 1250px; left: 380px; overflow-y: auto;" src="lib/breadtalk/image/rolling_pin/Scroll.png" >
+
+<div id="scrollerDiv">
+<p id="invisibleElement"></p>
+</div>
+</div>
+
+<script>
+//Ernest_Lee 121115: Setting the methodology of fade-in counter
+var count = 5;
+var interval;
+
+isIncrease= false;
+var speed = 0, speed2 = 0, increaseDiff = 0, decreaseDiff=0,
+initialIncreaseSpeed = 0, initialDecreaseSpeed = 0;
+var SpeedoArc;
+    
+//Fade-in Countdown counter function
+function updateTimer(){
+if(count > 0){
+$("#content").fadeOut('slow', function(){
+$("#content").text(count);
+$("#content").fadeIn();
+count--;
+});
+}
+else if(count == 0){
+$("#content").fadeOut('slow', function(){
+$("#content").text("Start!!");
+$("#content").fadeIn();
+count--;
+MainGame();
+console.log("MainGame()");
+});
+}
+else {
+$("#content").fadeOut();
+clearInterval(interval);
+}
+}
+
+//Ernest_Lee 161115: Set Speed and counter function
+function MainGame(){
+var numOfSpin = 0, distanceCovered = 0,
+counter = 0, timer = 10; 
+    
+//TimerInterval for counter animation
+TimerArc= setInterval(partTImerArc,25);
+SpeedoPaint();
+    
+$("#scrollerDiv").scroll(function() {
+var height = $("#scrollerDiv").scrollTop();
+for ( var i = 0; i < 250; i ++ ) {
+if ( height > i * 10 ) {
+if ( i >= 0 && i < 10 ) {
+$("#roller").attr("src", "lib/breadtalk/image/rolling_pin/Rolling_pin/rolling pin_0000"+i+".png");
+}
+if ( i >= 10 && i < 100 ) {
+$("#roller").attr("src", "lib/breadtalk/image/rolling_pin/Rolling_pin/rolling pin_000"+i+".png");
+}
+if ( i >= 100 && i < 1000 ) {
+$("#roller").attr("src", "lib/breadtalk/image/rolling_pin/Rolling_pin/rolling pin_00"+i+".png");
+$("#scrollerDiv").scrollTop(0);
+numOfSpin++;
+distanceCovered += 0.59;
+console.log(distanceCovered);
+console.log(numOfSpin);
+}
+}
+}
+})
+
+rollingInterval = setInterval(function() {
+console.log("rollingInterval"); 
+counter = counter + 1;
+timer = timer - 1;
+speed = distanceCovered / counter;
+speed2dec = speed.toFixed(2);
+//document.getElementById("speedSpan").innerHTML = speed2dec + "<br/>"+"ms";
+$('#speedSpan').html(speed2dec +'<br>ms');
+//document.getElementById("timeSpan").innerHTML = timer + "s"
+$('#timeSpan').html(timer + ' s');
+//Ernest_Lee 13/11/15: Set Conditional Checks; user satisfy game condition, advance to next page, else navigate to the "GameOver" Page.
+if ( counter == 10 && speed >25) {
+console.log("Count");
+clearInterval(rollingInterval);
+$("#page2").hide();
+$("#page3").show();
+}
+else if( counter == 10 && speed <25) {
+numOfSpin = 0; 
+distanceCovered = 0;
+counter = 0;
+timer= 10;
+//clearInterval(rollingInterval);
+$("#page2").hide();
+$("#GameOver").show();
+}
+if (speed2 ==0){
+increaseDiff = speed- speed2;
+initialIncreaseSpeed = 0;
+speed2 = speed;
+isIncrease =true;
+}else{
+if (speed > speed2){
+increaseDiff = speed-speed2;
+initialIncreaseSpeed = speed2;
+speed2 = speed;
+isIncrease = true;
+}else{
+console.log("speed decrease");
+decreaseDiff = speed2 - speed;
+initialDecreaseSpeed = speed2;
+speed2 = speed;
+isIncrease =false;
+}    
+}
+
+}, 1000)
+}
+
+//Ernest_Lee 121115: Set Gauge
+//canvas initialization
+//Speedometer
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+//CountDown Counter
+var canvas2= document.getElementById("Counter");
+var ctx2= canvas2.getContext("2d");
+//dimensions
+//Speedometer
+var W = canvas.width;
+var H = canvas.height;
+//CountDown Counter
+var W2 = canvas2.width;
+var H2 = canvas2.height;
+//Global Variables
+var position = 0;
+var new_position = 0;
+var position_speed = 0;
+var new_position_speed = 0;
+var difference = 0;
+var color = "#ffa500"; 
+var bgcolor = "#654321";
+var animation_loop, redraw_loop;
+    
+function radians(degrees) {
+return degrees * Math.PI / 180;
+}
+
+function drawGauge(){
+
+ctx.clearRect(0, 0, W, H);
+//Background 360 degree arc
+//Speedometer
+ctx.beginPath();
+ctx.strokeStyle = bgcolor;
+ctx.lineWidth = 30;
+ctx.arc(W/2, H/2, 130, 2.35, 0.8, false);
+ctx.stroke();
+//CountDown Counter
+ctx2.clearRect(0, 0, W, H);
+ctx2.beginPath();
+ctx2.strokeStyle = bgcolor;
+ctx2.lineWidth = 30;
+ctx2.arc(W/2, H/2, 130,2.35, 0.8, false);
+ctx2.stroke();
+}
+   
+function SpeedoPaint(){
+if (typeof SpeedoArc !== undefined) clearInterval(SpeedoArc);
+
+if(isIncrease==true){
+SpeedoArc = setInterval(animate_speedo_to, 1000/increaseDiff);
+}
+else{
+SpeedoArc = setInterval(animate_speedo_to, 1000/decreaseDiff);
+}
+}
+
+function animate_speedo_to()
+{
+if(isIncrease==true){
+if(initialIncreaseSpeed == speed2)
+clearInterval(SpeedoPaint);
+
+if(initialIncreaseSpeed < speed2)
+initialIncreaseSpeed++;
+
+ctx.clearRect(0, 0, W, H);
+
+ctx.beginPath();
+ctx.strokeStyle = bgcolor;
+ctx.lineWidth = 30;
+ctx.arc(W/2, H/2, 130, 2.35, 0.8, false);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.lineWidth = 30;
+ctx.strokeStyle = color;
+ctx.arc(W/2, H/2, 130, radians(135), radians(135 + initialIncreaseSpeed), false);
+ctx.stroke();
+}
+else{
+if(initialDecreaseSpeed == speed2)
+clearInterval(SpeedoPaint);
+
+if(initialDecreaseSpeed > speed2)
+initialDecreaseSpeed--;
+
+ctx.clearRect(0, 0, W, H);
+
+ctx.beginPath();
+ctx.strokeStyle = bgcolor;
+ctx.lineWidth = 30;
+ctx.arc(W/2, H/2, 130, 2.35, 0.8, false);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.lineWidth = 30;
+ctx.strokeStyle = color;
+ctx.arc(W/2, H/2, 130, radians(135), radians(135 + initialDecreaseSpeed), false);
+ctx.stroke();
+}
+}
+ 
+function draw(){
+//Cancel any movement animation if a new chart is requested
+if(typeof animation_loop != undefined) 
+clearInterval(animation_loop);
+//new_degrees = Math.round(Math.random()*260);
+new_position = Math.round(0.6*Math.PI*260);
+difference = new_position - position;
+drawGauge();
+}
+    
+function partTImerArc(){
+animate_counter();
+ctx2.beginPath();
+ctx2.lineWidth = 30;  
+if (position > 0){
+ctx2.strokeStyle = color;
+ctx2.globalAlpha = 1;
+ctx2.arc(W2/2, H2/2, 130, radians(135), radians(135+position), false);
+ctx2.stroke();
+}
+}
+    
+function animate_speed(){
+if(position_speed < new_position_speed)    
+position_speed++; 
+else
+position_speed--;    
+}
+    
+//function to make the chart move to new degrees
+function animate_counter(){ 
+
+if(position < new_position)    
+position++;
+}
+draw(); 
+//Draw a new chart at every user interaction, hence Sub 2000 to the user interaction function
+//redraw_loop = setInterval(draw, 1000);
+</script>
+
+<!--Ernest_Lee 161115: GameOver Page-->
+<div id="GameOver" align= "center" style=" background-image: url(lib/breadtalk/image/rolling_pin/GameOver.png);background-repeat: no-repeat;width: 100%;height: 100%;display: none;">
+<input style="outline:0;height:90px;width:400px; margin-top:1300px" type="image" id= "OK" src="lib/breadtalk/image/rolling_pin/Ok.png" onclick ="RevertPage()"/>
+</div>
+
+<!--Ernest_Lee 161115: Set RevertPage function when gameOver-->
+<script>
+function RevertPage() { 
+//navigate user to game page immediately.
+//Refresh entire LaunchPage
+location.reload();
+console.log("GameFail Navigate");
+} 
+</script>
+
+<!--Ernest_Lee 041115:3rd Game Page-->
+<div id="page3" align= "center" style=" background-image: url(lib/breadtalk/image/rolling_pin/Page3.png);background-repeat: no-repeat;width: 100%;height: 100%;display: none;">
+
+<!--Ernest_Lee 031115: set button action-->
+<input type="image"  style ="outline:0; height:100px;width:400px; margin-top:1300px" src="lib/breadtalk/image/rolling_pin/Claim_my_prize_button.png" alt="Submit" onClick = "Page4()">
+</div>
+
+<!--Ernest 031115: Script for 'claim my prize' button action- Page 3-->
+<script>
+function Page4() {
+$("#page3").hide();
+$("#page4").show();
+}
+</script>
+
+<!--Ernest_Lee 041115:4th Game Page-->
+<div id="page4" align= "center" style=" background-image: url(lib/breadtalk/image/rolling_pin/Page4.png); background-repeat: no-repeat; width: 100%; height: 100%; display: none;">
+
+<img src="lib/breadtalk/image/rolling_pin/Send_by_email.png" alt="" style="height:210px;width: 100%; margin-top:350px"> 
+<!--Ernest_Lee 031115: Create submission form & making form fields to be mandatory-->
+<br/><br/>
+<p><span id="email_wrong" style="font-family: SFNewRepublic; display:none;">* Please fill in all fields.</span></p>
+<font face="SFNewRepublic" size=6>Name: </font><input style="width:400px; height:60px;" type="text" name="name" id="name" /><br><br>
+<font face="SFNewRepublic" size=6>Email: </font><input style="width:400px; height:60px;"type="text" name="email" id="email" /><br><br>   
+<input style=" outline:0" type="image" src="lib/breadtalk/image/rolling_pin/Submit.png" alt="Submit"  onClick = "Page5()">
+</div>
+
+<!--Ernest 031115: Script for 'submit' button action- Page 4-->
+<script>
+function validateEmail(email)
+{
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	return re.test(email);
+}
+
+function Page5() {
+	// Check to see if the form is valid
+	if($.trim($("#name").val()) == "" || $.trim($("#email").val()) == "")
+	{
+		$("#email_wrong").html("* Please fill in all fields.");
+		$("#email_wrong").fadeIn();
+	}
+	else
+	{
+		if(validateEmail($("#email").val()))
+		{
+			// If the form is valid, go to the next page.
+			$("#page4").hide();
+			$("#page5").show();
+			ajax_sendVoucher("function.do", "formType=sendVoucher&mediaURL=1.mp4&projectID=breadtalk&fileName=breadtalk_v2.jpg&name=" + $("#name").val() + "&email=" + $("#email").val() + "&contact=&generatedFrom=BreadTalk Mobile Rolling Pin Game");
+		}
+		else
+		{
+			$("#email_wrong").html("* Please enter a valid email address.");
+			$("#email_wrong").fadeIn();
+		}
+	}
+}
+</script>
+
+<!--Ernest_Lee 041115:5th Game Page-->
+<div id="page5" align= "center" style=" background-image: url(lib/breadtalk/image/rolling_pin/Page5.png); background-repeat: no-repeat; width: 100%;height: 100%;display: none;">
+</div>
+
+</body>
+</html>
